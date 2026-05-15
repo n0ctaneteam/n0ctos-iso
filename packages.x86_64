@@ -1,3 +1,5 @@
+# defaults
+
 alsa-utils
 amd-ucode
 arch-install-scripts
@@ -126,3 +128,23 @@ xdg-utils
 xfsprogs
 xl2tpd
 zsh
+
+
+# N0ctOS packages
+
+linux-zen
+hyprland
+waybar
+calamares
+sddm
+neovim
+bluetui
+bolt
+rofi
+chromium
+brave
+gparted
+impala
+sushi
+otf-hermit-nerd
+wiremix
