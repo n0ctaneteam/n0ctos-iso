@@ -36,6 +36,17 @@ automated_script() {
             /tmp/startup_script
         fi
     fi
+
+
+
+    # now our stuff, previous was default junk
+    # 
+    # 
+    # 
+    # 
+    # Enable autostart services for the live user (e.g. "liveuser" or "root")
+    systemctl --global enable n0ctos-hyprland.service
+    systemctl --global enable n0ctos-calamares.service
 }
 
 if [[ $(tty) == "/dev/tty1" ]]; then

@@ -51,7 +51,6 @@ less
 lftp
 libfido2
 libusb-compat
-linux
 linux-atm
 linux-firmware
 linux-firmware-marvell
@@ -132,17 +131,17 @@ zsh
 
 # N0ctOS packages
 
+n0ctos-calamares
+n0ctos-hyprland
+
 linux-zen
-hyprland
 waybar
-calamares
 sddm
 neovim
 bluetui
 bolt
 rofi
 chromium
-brave
 gparted
 impala
 sushi

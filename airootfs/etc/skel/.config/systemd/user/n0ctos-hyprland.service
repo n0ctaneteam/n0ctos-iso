@@ -1,0 +1,13 @@
+[Unit]
+Description=n0ctos Hyprland Session Component
+BindsTo=graphical-session.target
+After=graphical-session.target
+After=hyprland-session.target
+
+[Service]
+Type=simple
+ExecStart=uwsm app -- /usr/bin/hyprland
+Restart=on-failure
+
+[Install]
+WantedBy=hyprland-session.target
