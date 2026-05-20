@@ -69,7 +69,7 @@ cache_sudo() {
 clean_workdir() {
     if [[ -d "${WORK_DIR}" ]]; then
         echo "🧹 Cleaning stale work directory..."
-        sudo rm -rf ${WORK_DIR}"
+        sudo rm -rf "${WORK_DIR}"
     fi
     mkdir -p "${WORK_DIR}" "${OUT_DIR}"
 }
@@ -84,10 +84,11 @@ build_iso() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
+    sudo pacman -Syy
     sudo mkarchiso -v \
         -w "${WORK_DIR}" \
         -o "${OUT_DIR}" \
-        "${PROFILE_DIR}"
+        "./"
 }
 
 # ── Step 4: Locate the built ISO ──────────────
@@ -161,11 +162,10 @@ ask_qemu
 
 case "${QEMU_CHOICE,,}" in
     y|yes)
-        launch_qemu
+        ./QEMU_TEST
         ;;
     *)
-        echo "  Skipping QEMU. ISO is at:"
-        echo "  ${ISO_PATH}"
+        echo -e Skipping QEMU. ISO is at: \n ${ISO_PATH}
         notify "low" "N0CTOS — Done" "QEMU skipped. ISO at: ${ISO_PATH}"
         ;;
 esac

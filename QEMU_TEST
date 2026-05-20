@@ -1,0 +1,151 @@
+#!/bin/env bash
+# ─────────────────────────────────────────────
+#  QEMU_TEST.sh — N0CTOS QEMU ISO Tester
+#  Usage: ./QEMU_TEST.sh [optional-path-to-iso]
+# ─────────────────────────────────────────────
+
+set -euo pipefail
+
+OUT_DIR="./out"
+
+# ── Helpers ──────────────────────────────────
+notify() {
+    local urgency="${1}"; local summary="${2}"; local body="${3}"
+    notify-send \
+        --urgency="${urgency}" \
+        --icon=system-run \
+        --app-name="N0CTOS Builder" \
+        "${summary}" "${body}"
+}
+
+separator() {
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
+# ── Step 1: Pick ISO ──────────────────────────
+pick_iso() {
+    # If passed as argument, use it directly
+    if [[ $# -ge 1 ]]; then
+        ISO_PATH="$1"
+        if [[ ! -f "${ISO_PATH}" ]]; then
+            echo "❌  ISO not found: ${ISO_PATH}"
+            exit 1
+        fi
+        echo "📀 Using ISO: ${ISO_PATH}"
+        return
+    fi
+
+    # Scan ./out for ISOs
+    mapfile -t ISO_LIST < <(ls -t "${OUT_DIR}"/*.iso 2>/dev/null)
+
+    if [[ ${#ISO_LIST[@]} -eq 0 ]]; then
+        echo "❌  No ISO files found in ${OUT_DIR}/"
+        exit 1
+    fi
+
+    separator
+    echo "  📀 Available ISOs in ${OUT_DIR}/:"
+    separator
+    for i in "${!ISO_LIST[@]}"; do
+        printf "  [%d] %s\n" "$((i+1))" "$(basename "${ISO_LIST[$i]}")"
+    done
+    separator
+    echo ""
+
+    read -rp "  → Select ISO [1-${#ISO_LIST[@]}]: " ISO_CHOICE
+
+    # Validate choice
+    if ! [[ "${ISO_CHOICE}" =~ ^[0-9]+$ ]] \
+        || (( ISO_CHOICE < 1 || ISO_CHOICE > ${#ISO_LIST[@]} )); then
+        echo "❌  Invalid selection: ${ISO_CHOICE}"
+        exit 1
+    fi
+
+    ISO_PATH="${ISO_LIST[$((ISO_CHOICE-1))]}"
+    echo ""
+    echo "  ✔  Selected: $(basename "${ISO_PATH}")"
+    echo ""
+}
+
+# ── Step 2: Pick Boot Mode ────────────────────
+pick_boot_mode() {
+    separator
+    echo "  🔧 Boot Mode:"
+    echo "  [1] UEFI  (uses OVMF — recommended for modern ISOs)"
+    echo "  [2] BIOS  (legacy SeaBIOS)"
+    separator
+    echo ""
+
+    read -rp "  → Your choice [1/2] (default: 1): " BOOT_CHOICE
+    BOOT_CHOICE="${BOOT_CHOICE:-1}"
+    echo ""
+
+    case "${BOOT_CHOICE}" in
+        1)
+            BOOT_MODE="uefi"
+            echo "  ✔  Boot mode: UEFI"
+            ;;
+        2)
+            BOOT_MODE="bios"
+            echo "  ✔  Boot mode: BIOS (Legacy)"
+            ;;
+        *)
+            echo "❌  Invalid choice. Defaulting to UEFI."
+            BOOT_MODE="uefi"
+            ;;
+    esac
+    echo ""
+}
+
+# ── Step 3: Build flags & Launch ─────────────
+launch_qemu() {
+    # Base flags (no firmware yet)
+    QEMU_FLAGS=(
+        -enable-kvm
+        -machine  type=q35,accel=kvm
+        -cpu      host
+        -m        2G
+        -smp      2
+        -vga      qxl
+        -display  default,gl=on
+        -boot     d
+        -cdrom    "${ISO_PATH}"
+        -netdev   user,id=net0
+        -device   virtio-net-pci,netdev=net0
+        -audiodev pipewire,id=audio0
+        -device   ich9-intel-hda
+        -device   hda-output,audiodev=audio0
+    )
+
+    # Inject UEFI firmware if needed
+    if [[ "${BOOT_MODE}" == "uefi" ]]; then
+        OVMF_PATH="/usr/share/ovmf/x64/OVMF.4m.fd"
+        if [[ ! -f "${OVMF_PATH}" ]]; then
+            echo "❌  OVMF not found at ${OVMF_PATH}"
+            echo "    Install it with: sudo pacman -S edk2-ovmf"
+            exit 1
+        fi
+        QEMU_FLAGS+=(
+            -drive if=pflash,format=raw,readonly=on,file="${OVMF_PATH}"
+        )
+    fi
+
+    separator
+    echo "  🖥  Launching QEMU:"
+    echo "  📀 ISO:  $(basename "${ISO_PATH}")"
+    echo "  🔧 Mode: ${BOOT_MODE^^}"
+    separator
+    echo ""
+
+    notify "low" "N0CTOS — QEMU Starting" \
+        "[${BOOT_MODE^^}] Launching $(basename "${ISO_PATH}")"
+
+    WLR_RENDERER_ALLOW_SOFTWARE=1 qemu-system-x86_64 "${QEMU_FLAGS[@]}"
+}
+
+# ─────────────────────────────────────────────
+#  MAIN
+# ─────────────────────────────────────────────
+pick_iso "$@"
+pick_boot_mode
+launch_qemu

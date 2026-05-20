@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# N0ctOS repo bootstrap script
+
+set -euo pipefail
+
+PACMAN_CONF="/etc/pacman.conf"
+REPO_NAME="N0ctOS-core"
+REPO_SERVER="https://raw.githubusercontent.com/n0ctaneteam/N0ctOS-PKGs/main/__deployed__/x86_64"
+
+if [[ $EUID -ne 0 ]]; then
+    echo "[ERROR] run this as root (sudo ./init-n0ctos.sh)"
+    exit 1
+fi
+
+if grep -q "^\[$REPO_NAME\]" "$PACMAN_CONF"; then
+    echo "--> [$REPO_NAME] found in $PACMAN_CONF, updating SigLevel and Server"
+    sed -i "/^\[$REPO_NAME\]/,/^\[/ {
+        s|^SigLevel = .*|SigLevel = Never|
+        s|^Server = .*|Server = $REPO_SERVER|
+    }" "$PACMAN_CONF"
+else
+    echo "--> [$REPO_NAME] not found, inserting above first repo"
+    sed -i "/^\[core\]/ i [$REPO_NAME]\nSigLevel = Never\nServer = $REPO_SERVER\n" "$PACMAN_CONF"
+fi
+
+echo "--> syncing package databases"
+pacman -Sy
+
+echo "--> installing n0ctos-keyring"
+pacman -S --noconfirm n0ctos-keyring
+
+echo "--> populating pacman keyring"
+pacman-key --populate n0ctos
+
+echo "--> flipping SigLevel to Required DatabaseOptional"
+sed -i "/^\[$REPO_NAME\]/,/^\[/ {
+    s|^SigLevel = .*|SigLevel = Required DatabaseOptional|
+}" "$PACMAN_CONF"
+
+echo "--> final sync to verify signatures"
+pacman -Sy
+
+echo ""
+echo "done. [$REPO_NAME] is ready."
