@@ -71,6 +71,9 @@ clean_workdir() {
         echo "🧹 Cleaning stale work directory..."
         sudo rm -rf "${WORK_DIR}"
     fi
+    if [[ -d "${OUT_DIR}" ]]; then
+        sudo rm -rf "${OUT_DIR}"
+    fi
     mkdir -p "${WORK_DIR}" "${OUT_DIR}"
 }
 
