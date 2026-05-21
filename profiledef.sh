@@ -9,7 +9,7 @@ iso_application="N0ctOS Linux Live/install Medium"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="n0ctos"
 buildmodes=('iso')
-bootmodes=('uefi.grub')
+bootmodes=('uefi.grub' 'bios.syslinux')
 pacman_conf="n0ctos-pacman.conf"
 airootfs_image_type="squashfs"
 airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M')
