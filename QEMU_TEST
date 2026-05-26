@@ -84,10 +84,12 @@ pick_boot_mode() {
         1)
             BOOT_MODE="uefi"
             echo "  ✔  Boot mode: UEFI"
+            run_archiso -i ${ISO_PATH} -u
             ;;
         2)
             BOOT_MODE="bios"
             echo "  ✔  Boot mode: BIOS (Legacy)"
+            run_archiso -i ${ISO_PATH}
             ;;
         *)
             echo "❌  Invalid choice. Defaulting to UEFI."
@@ -97,56 +99,8 @@ pick_boot_mode() {
     echo ""
 }
 
-# ── Step 3: Build flags & Launch ─────────────
-launch_qemu() {
-    # Base flags (no firmware yet)
-    QEMU_FLAGS=(
-        -enable-kvm
-        -machine  type=q35,accel=kvm
-        -cpu      host
-        -m        2G
-        -smp      2
-        -vga      qxl
-        -display  default,gl=on
-        -boot     d
-        -cdrom    "${ISO_PATH}"
-        -netdev   user,id=net0
-        -device   virtio-net-pci,netdev=net0
-        -audiodev pipewire,id=audio0
-        -device   ich9-intel-hda
-        -device   hda-output,audiodev=audio0
-    )
-
-    # Inject UEFI firmware if needed
-    if [[ "${BOOT_MODE}" == "uefi" ]]; then
-        OVMF_CODE="/usr/share/ovmf/x64/OVMF_CODE.4m.fd"
-        OVMF_VARS_ORIG="/usr/share/ovmf/x64/OVMF_VARS.4m.fd"
-        OVMF_VARS_TMP="$(mktemp /tmp/ovmf_vars_XXXXXX.fd)"
-        cp "${OVMF_VARS_ORIG}" "${OVMF_VARS_TMP}"
-        trap 'rm -f "${OVMF_VARS_TMP}"' EXIT
-    
-        QEMU_FLAGS+=(
-            -drive if=pflash,format=raw,readonly=on,file="${OVMF_CODE}"
-            -drive if=pflash,format=raw,file="${OVMF_VARS_TMP}"
-        )
-    fi
-
-    separator
-    echo "  🖥  Launching QEMU:"
-    echo "  📀 ISO:  $(basename "${ISO_PATH}")"
-    echo "  🔧 Mode: ${BOOT_MODE^^}"
-    separator
-    echo ""
-
-    notify "low" "N0CTOS — QEMU Starting" \
-        "[${BOOT_MODE^^}] Launching $(basename "${ISO_PATH}")"
-
-    WLR_RENDERER_ALLOW_SOFTWARE=1 qemu-system-x86_64 "${QEMU_FLAGS[@]}"
-}
-
 # ─────────────────────────────────────────────
 #  MAIN
 # ─────────────────────────────────────────────
 pick_iso "${OUT_DIR}"/*.iso
 pick_boot_mode
-launch_qemu

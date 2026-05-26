@@ -8,26 +8,7 @@ set -euo pipefail
 
 # ── Paths ────────────────────────────────────
 PROFILE_DIR="./"
-WORK_DIR="./work"
-OUT_DIR="./out"
-
-# ── QEMU Config Array ────────────────────────
-QEMU_FLAGS=(
-    -enable-kvm
-    -machine  type=q35,accel=kvm
-    -cpu      host
-    -m        2G
-    -smp      2
-    -vga      virtio
-    -display  sdl,gl=on
-    -boot     d
-    -cdrom    ""                          # filled at runtime
-    -netdev   user,id=net0
-    -device   virtio-net-pci,netdev=net0
-    -audiodev pipewire,id=audio0
-    -device   ich9-intel-hda
-    -device   hda-output,audiodev=audio0
-)
+WORK_DIR="./--output--"
 
 # ── Helpers ──────────────────────────────────
 notify() {
@@ -71,10 +52,8 @@ clean_workdir() {
         echo "🧹 Cleaning stale work directory..."
         sudo rm -rf "${WORK_DIR}"
     fi
-    if [[ -d "${OUT_DIR}" ]]; then
-        sudo rm -rf "${OUT_DIR}"
-    fi
-    mkdir -p "${WORK_DIR}" "${OUT_DIR}"
+    sleep 1
+    mkdir -p "${WORK_DIR}"
 }
 
 # ── Step 3: Build ─────────────────────────────
@@ -90,15 +69,15 @@ build_iso() {
     sudo pacman -Syy
     sudo mkarchiso -v \
         -w "${WORK_DIR}" \
-        -o "${OUT_DIR}" \
+        -o "${WORK_DIR}" \
         "./"
 }
 
 # ── Step 4: Locate the built ISO ──────────────
 find_iso() {
-    ISO_PATH="$(ls -t "${OUT_DIR}"/*.iso 2>/dev/null | head -n1)"
+    ISO_PATH="$(ls -t "${WORK_DIR}"/*.iso 2>/dev/null | head -n1)"
     if [[ -z "${ISO_PATH}" ]]; then
-        echo "❌  No ISO found in ${OUT_DIR}"
+        echo "❌  No ISO found in ${WORK_DIR}"
         notify "critical" "N0CTOS Build Failed" "No ISO was produced. Check the build log."
         exit 1
     fi
@@ -141,7 +120,7 @@ launch_qemu() {
     notify "low" "N0CTOS — QEMU Starting" \
         "Launching VM with $(basename "${ISO_PATH}")"
 
-    qemu-system-x86_64 "${QEMU_FLAGS[@]}"
+    run_archiso -u -i ${ISO_PATH}
 }
 
 # ─────────────────────────────────────────────

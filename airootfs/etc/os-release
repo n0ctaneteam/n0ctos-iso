@@ -1,9 +1,9 @@
 NAME=N0ctOS
-PRETTY_NAME="N0ctOS 0.0.1 (The Beginning)"
+PRETTY_NAME="N0ctOS Live (DWM live Installer)"
 ID=n0ctos
 ID_LIKE=arch
 VERSION="0(The Beginning)"
-VERSION_ID=0.0.0
+VERSION_ID=0.0.1
 VERSION_CODENAME=beginning
 BUILD_ID=rolling
 RELEASE_TYPE=development

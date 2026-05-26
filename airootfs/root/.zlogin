@@ -4,3 +4,6 @@ if grep -Fqa 'accessibility=' /proc/cmdline &> /dev/null; then
 fi
 
 ~/.automated_script.sh
+
+sudo rfkill unblock all
+sudo systemctl restart iwd

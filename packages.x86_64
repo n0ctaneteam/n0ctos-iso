@@ -1,5 +1,3 @@
-# defaults
-
 alsa-utils
 amd-ucode
 arch-install-scripts
@@ -51,6 +49,7 @@ less
 lftp
 libfido2
 libusb-compat
+linux
 linux-atm
 linux-firmware
 linux-firmware-marvell
@@ -116,7 +115,6 @@ udftools
 usb_modeswitch
 usbmuxd
 usbutils
-uwsm
 vim
 virtualbox-guest-utils-nox
 vpnc
@@ -129,24 +127,32 @@ xfsprogs
 xl2tpd
 zsh
 
+kvantum
+kvantum-qt5
 
-# N0ctOS packages
+qt6ct
+qt5ct
 
-n0ctos-calamares
-n0ctos-hyprland
-n0ctos-runapp
+breeze-icons
 
-linux-zen
-linux-zen-headers
-waybar
-sddm
+ttf-jetbrains-mono-nerd
+ttf-jetbrains-mono
+ttf-profont-nerd
+ttf-liberation-mono-nerd
+
+# ========================
+# CUSTOM STUFF FOR THE ISO
+# ========================
+n0ctos-iso-pkgs
+
+bash
+zsh-completions
+
 neovim
 bluetui
 bolt
-rofi
 chromium
-gparted
 impala
-sushi
-otf-hermit-nerd
-wiremix
+
+# Your TUI script deps
+toilet
